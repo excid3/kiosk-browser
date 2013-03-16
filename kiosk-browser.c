@@ -72,18 +72,18 @@ int main(int argc, char** argv) {
 }
 
 void refresh_me(int interval) {
-    char cmd[10];
-    int pid = fork();
-    if (pid == 0) {
-        while (1) {
-            printf("waiting %d seconds.\n", interval);
-            usleep(interval * USEC_PER_SECOND);
-            sprintf(cmd, "kill -s 1 %d\n",(int) getppid());
-            printf("running cmd: %s\n", cmd);
-            system( cmd );
-        }
-        exit(0);
+  char cmd[10];
+  int pid = fork();
+  if (pid == 0) {
+    while (1) {
+      printf("waiting %d seconds.\n", interval);
+      usleep(interval * USEC_PER_SECOND);
+      sprintf(cmd, "kill -s 1 %d\n",(int) getppid());
+      printf("running cmd: %s\n", cmd);
+      system( cmd );
     }
+  exit(0);
+  }
 }
 
 gboolean on_key_press(GtkWidget* window, GdkEventKey* key, gpointer userdata) {
@@ -98,7 +98,7 @@ gboolean on_key_press(GtkWidget* window, GdkEventKey* key, gpointer userdata) {
 }
 
 void reload_browser(int signum) {
-  webkit_web_view_reload_bypass_cache(web_view);
+  webkit_web_view_reload(web_view);
 }
 
 void toggle_fullscreen(int signum) {
