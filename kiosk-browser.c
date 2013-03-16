@@ -1,11 +1,15 @@
+#include <stdlib.h>
 #include <stdio.h>
 #include <signal.h>
 #include <syslog.h>
+#include <unistd.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
 #include <webkit/webkit.h>
 #include <JavaScriptCore/JSStringRef.h>
 #include <JavaScriptCore/JSContextRef.h>
+
+static const long USEC_PER_SECOND = 1000000;
 
 gboolean on_key_press(GtkWidget*, GdkEventKey*, gpointer);
 
@@ -14,6 +18,7 @@ void toggle_fullscreen(int);
 void jsmessage(int);
 void maximize();
 void unmaximize();
+void refresh_me(int);
 
 static WebKitWebView* web_view;
 static GtkWidget *window;
@@ -26,6 +31,11 @@ gchar* default_url = "file:///home/pi/kiosk/test-reload.html";
 int main(int argc, char** argv) {
 
   gtk_init(&argc, &argv);
+  int interval = 90;
+  if (argc > 2) {
+     interval = atoi(argv[2]); 
+  }
+  refresh_me(interval);
 
   window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 
@@ -61,6 +71,21 @@ int main(int argc, char** argv) {
   return 0;
 }
 
+void refresh_me(int interval) {
+  char cmd[10];
+  int pid = fork();
+  if (pid == 0) {
+    while (1) {
+      printf("waiting %d seconds.\n", interval);
+      usleep(interval * USEC_PER_SECOND);
+      sprintf(cmd, "kill -s 1 %d\n",(int) getppid());
+      printf("running cmd: %s\n", cmd);
+      system( cmd );
+    }
+  exit(0);
+  }
+}
+
 gboolean on_key_press(GtkWidget* window, GdkEventKey* key, gpointer userdata) {
   if(key->type == GDK_KEY_PRESS && key->keyval == GDK_F5) {
     reload_browser(0);
@@ -73,7 +98,7 @@ gboolean on_key_press(GtkWidget* window, GdkEventKey* key, gpointer userdata) {
 }
 
 void reload_browser(int signum) {
-  webkit_web_view_reload_bypass_cache(web_view);
+  webkit_web_view_reload(web_view);
 }
 
 void toggle_fullscreen(int signum) {
